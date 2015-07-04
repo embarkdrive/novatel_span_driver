@@ -14,6 +14,7 @@ add_message_files(
   CommonFooter.msg
   CommonHeader.msg
   BESTPOS.msg
+  HEADING.msg 
   CORRIMUDATA.msg
   INSCOV.msg
   INSPVAX.msg 
