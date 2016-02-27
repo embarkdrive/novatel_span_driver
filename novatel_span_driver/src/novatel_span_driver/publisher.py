@@ -30,7 +30,7 @@ import rospy
 import tf
 import geodesy.utm
 
-from novatel_msgs.msg import BESTPOS, CORRIMUDATA, INSCOV, INSPVAX
+from novatel_msgs.msg import BESTPOS, CORRIMUDATA, INSCOV, INSPVAX, ImuState
 from sensor_msgs.msg import Imu, NavSatFix, NavSatStatus
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Quaternion, Point, Pose, Twist
@@ -105,6 +105,7 @@ class NovatelPublisher(object):
         rospy.Subscriber('novatel_data/corrimudata', CORRIMUDATA, self.corrimudata_handler)
         rospy.Subscriber('novatel_data/inscov', INSCOV, self.inscov_handler)
         rospy.Subscriber('novatel_data/inspvax', INSPVAX, self.inspvax_handler)
+        rospy.Subscriber('novatel_data/origin_offset', Pose, self.apply_origin_offset)
 
     def bestpos_handler(self, bestpos):
         navsat = NavSatFix()
@@ -168,6 +169,25 @@ class NovatelPublisher(object):
         # Ship ito
         self.pub_navsatfix.publish(navsat)
 
+    def apply_origin_offset(self, offset):
+        print 'apliying origin', offset.x, offset.y, offset.z
+        self.origin.x += offset.x
+        self.origin.y += offset.y
+        self.origin.z += offset.z
+        self.pub_origin.publish(position=self.origin)
+
+    def set_origin(self, inspvax):
+        try:
+            utm_pos = geodesy.utm.fromLatLong(inspvax.latitude, inspvax.longitude)
+        except ValueError:
+            # Probably coordinates out of range for UTM conversion.
+            return
+
+        self.origin.x = utm_pos.easting
+        self.origin.y = utm_pos.northing
+        self.origin.z = inspvax.altitude
+        self.pub_origin.publish(position=self.origin)
+
     def inspvax_handler(self, inspvax):
         # Convert the latlong to x,y coordinates and publish an Odometry
         try:
@@ -177,10 +197,7 @@ class NovatelPublisher(object):
             return
 
         if not self.init and self.zero_start:
-            self.origin.x = utm_pos.easting
-            self.origin.y = utm_pos.northing
-            self.origin.z = inspvax.altitude
-            self.pub_origin.publish(position=self.origin)
+            set_origin(inspvax)
 
         odom = Odometry()
         odom.header.stamp = rospy.Time.now()
@@ -194,11 +211,15 @@ class NovatelPublisher(object):
         # Save this on an instance variable, so that it can be published
         # with the IMU message as well.
         self.orientation = tf.transformations.quaternion_from_euler(
-            radians(inspvax.pitch),
             radians(inspvax.roll),
+            radians(-inspvax.pitch),
             radians(90 - inspvax.azimuth))
-        print inspvax.azimuth
+
+        # print inspvax.azimuth
         odom.pose.pose.orientation = Quaternion(*self.orientation)
+        odom.pose.covariance[0] = pow(2, inspvax.latitude_std)
+        odom.pose.covariance[7] = pow(2, inspvax.longitude_std)
+        odom.pose.covariance[14] = pow(2, inspvax.altitude_std)
         odom.pose.covariance[21] = self.orientation_covariance[0] = pow(2, inspvax.pitch_std)
         odom.pose.covariance[28] = self.orientation_covariance[4] = pow(2, inspvax.roll_std)
         odom.pose.covariance[35] = self.orientation_covariance[8] = pow(2, inspvax.azimuth_std)

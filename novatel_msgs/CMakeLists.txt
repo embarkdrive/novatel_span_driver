@@ -18,6 +18,7 @@ add_message_files(
   CORRIMUDATA.msg
   INSCOV.msg
   INSPVAX.msg 
+  ImuState.msg
 )
 
 generate_messages(
