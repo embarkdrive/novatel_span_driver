@@ -17,8 +17,7 @@ add_message_files(
   HEADING.msg 
   CORRIMUDATA.msg
   INSCOV.msg
-  INSPVAX.msg 
-  ImuState.msg
+  INSPVAX.msg
 )
 
 generate_messages(

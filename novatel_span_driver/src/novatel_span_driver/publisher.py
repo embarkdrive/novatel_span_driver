@@ -30,7 +30,7 @@ import rospy
 import tf
 import geodesy.utm
 
-from novatel_msgs.msg import BESTPOS, CORRIMUDATA, INSCOV, INSPVAX, ImuState
+from novatel_msgs.msg import BESTPOS, CORRIMUDATA, INSCOV, INSPVAX
 from sensor_msgs.msg import Imu, NavSatFix, NavSatStatus
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Quaternion, Point, Pose, Twist
@@ -105,7 +105,7 @@ class NovatelPublisher(object):
         rospy.Subscriber('novatel_data/corrimudata', CORRIMUDATA, self.corrimudata_handler)
         rospy.Subscriber('novatel_data/inscov', INSCOV, self.inscov_handler)
         rospy.Subscriber('novatel_data/inspvax', INSPVAX, self.inspvax_handler)
-        rospy.Subscriber('novatel_data/origin_offset', Pose, self.apply_origin_offset)
+        rospy.Subscriber('novatel_data/set_origin', Point, self.set_new_origin)
 
     def bestpos_handler(self, bestpos):
         navsat = NavSatFix()
@@ -169,11 +169,11 @@ class NovatelPublisher(object):
         # Ship ito
         self.pub_navsatfix.publish(navsat)
 
-    def apply_origin_offset(self, offset):
-        print 'apliying origin', offset.x, offset.y, offset.z
-        self.origin.x += offset.x
-        self.origin.y += offset.y
-        self.origin.z += offset.z
+    def set_new_origin(self, new_orig):
+        print 'apliying origin', new_orig.x, new_orig.y, new_orig.z
+        self.origin.x = new_orig.x
+        self.origin.y = new_orig.y
+        self.origin.z = new_orig.z
         self.pub_origin.publish(position=self.origin)
 
     def set_origin(self, inspvax):
@@ -197,7 +197,7 @@ class NovatelPublisher(object):
             return
 
         if not self.init and self.zero_start:
-            set_origin(inspvax)
+            self.set_origin(inspvax)
 
         odom = Odometry()
         odom.header.stamp = rospy.Time.now()
