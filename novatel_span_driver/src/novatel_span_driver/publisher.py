@@ -217,9 +217,9 @@ class NovatelPublisher(object):
 
         # print inspvax.azimuth
         odom.pose.pose.orientation = Quaternion(*self.orientation)
-        odom.pose.covariance[0] = pow(2, inspvax.latitude_std)
-        odom.pose.covariance[7] = pow(2, inspvax.longitude_std)
-        odom.pose.covariance[14] = pow(2, inspvax.altitude_std)
+        odom.pose.covariance[0] = pow(inspvax.latitude_std, 2)
+        odom.pose.covariance[7] = pow(inspvax.longitude_std, 2)
+        odom.pose.covariance[14] = pow(inspvax.altitude_std, 2)
         odom.pose.covariance[21] = self.orientation_covariance[0] = pow(2, inspvax.pitch_std)
         odom.pose.covariance[28] = self.orientation_covariance[4] = pow(2, inspvax.roll_std)
         odom.pose.covariance[35] = self.orientation_covariance[8] = pow(2, inspvax.azimuth_std)
