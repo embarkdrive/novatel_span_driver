@@ -77,9 +77,11 @@ def init():
 
 def create_sock(name):
     try:
+        print rospy.has_param('~ip_address'), rospy.get_param('~ip_address')
         if rospy.has_param('~ip_address'):
+            print 'here'
             ip = rospy.get_param('~ip_address')
-            data_port = rospy.get_param('~ip_port', DEFAULT_PORT)
+            port = rospy.get_param('~ip_port', DEFAULT_PORT)
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             ip_port = (ip, port)
             sock.connect(ip_port)

@@ -1,14 +1,14 @@
 <launch>
   <!-- <arg name="ip" default="198.161.73.9" /> -->
   <arg name="serial_port" default="/dev/ttyUSB0" />
-  <arg name="serial_baud" default="9600" />
+  <arg name="serial_baud" default="115200" />
 
   <node name="novatel_span_driver" pkg="novatel_span_driver" type="driver" output="screen">
     <param name="serial_port" value="$(arg serial_port)" />
     <param name="serial_baud" value="$(arg serial_baud)" />
     <rosparam ns="configuration">
       log_request:
-        inspvaxb: 0.5
+        inspvaxb: 0.02
         bestposb: 0.5
         corrimudatab: 0.5
         inscovb: 1
