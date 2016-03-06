@@ -48,6 +48,7 @@ DEFAULT_IP = '198.161.73.9'
 DEFAULT_PORT = 3001
 
 SOCKET_TIMEOUT = 100.0
+SERIAL_TIMEOUT = 1
 socks = []
 ports = {}
 monitor = Monitor(ports)
@@ -77,19 +78,18 @@ def init():
 
 def create_sock(name):
     try:
-        print rospy.has_param('~ip_address'), rospy.get_param('~ip_address')
+        # print rospy.has_param('~ip_address'), rospy.get_param('~ip_address')
         if rospy.has_param('~ip_address'):
-            print 'here'
             ip = rospy.get_param('~ip_address')
-            port = rospy.get_param('~ip_port', DEFAULT_PORT)
+            data_port = rospy.get_param('~ip_port', DEFAULT_PORT)
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            ip_port = (ip, port)
+            ip_port = (ip, data_port)
             sock.connect(ip_port)
             rospy.loginfo("Successfully connected to %%s port at %s:%d" % ip_port % name)
         elif rospy.has_param('~serial_port'):
             port = rospy.get_param('~serial_port')
             baud = rospy.get_param('~serial_baud', 9600)
-            sock = serial.Serial(port=port, baudrate=baud, timeout=SOCKET_TIMEOUT)
+            sock = serial.Serial(port=port, baudrate=baud, timeout=SERIAL_TIMEOUT)
             rospy.loginfo("Successfully connected to %%s port at %s:%d" % (port, baud) % name)
 
             # TODO: Fix this monkey patch
@@ -103,7 +103,7 @@ def create_sock(name):
             ip = rospy.get_param('~ip', DEFAULT_IP)
             data_port = rospy.get_param('~port', DEFAULT_PORT)
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            ip_port = (ip, port)
+            ip_port = (ip, data_port)
             sock.connect(ip_port)
             rospy.loginfo("Successfully connected to %%s port at %s:%d" % ip_port % name)
     except (socket.error, serial.SerialException) as e:
